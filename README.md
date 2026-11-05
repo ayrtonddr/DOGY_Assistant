@@ -27,7 +27,7 @@ sudo apt install -y git make curl
 curl -LsSf https://astral.sh/uv/install.sh | sh
 # Open a new terminal or source the installer-provided environment file
 # clone your GitHub repository, then:
-cd dogy
+cd DOGY_Assistant
 uv lock
 uv sync --group dev
 make test
@@ -55,7 +55,7 @@ Create an **empty private** repository named `dogy` in GitHub (do not pre-create
 git init -b main
 git add .
 git commit -m "Bootstrap DOGY offline foundation"
-git remote add origin git@github.com:YOUR_USERNAME/dogy.git
+git remote add origin git@github.com:YOUR_USERNAME/DOGY_Assistant.git
 git push -u origin main
 ```
 
