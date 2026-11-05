@@ -9,5 +9,10 @@ family_accounts_enabled = false
 [storage]
 state_dir = "state"
 [llm]
-# Future Pi-to-T14 inference requires WireGuard + mTLS. Disabled until implemented.
+# Offline remains the safe default. For local Ollama, set backend = "ollama".
+# Remote inference requires separate authentication and transport work.
 backend = "disabled"
+model = "qwen2.5:3b"
+endpoint = "http://127.0.0.1:11434"
+timeout = 90
+max_tokens = 160
