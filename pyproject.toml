@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 name = "dogy-assistant"
 version = "0.1.0"
 description = "DOGY local-first family AI assistant foundation"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.14"
 dependencies = []
-[project.optional-dependencies]
+[dependency-groups]
 dev = ["pytest>=8,<10", "ruff>=0.7,<1"]
 [project.scripts]
 dogy = "dogy.cli:main"

@@ -22,10 +22,14 @@ DOGY is being built for an Ubuntu ThinkPad T14 PoC, then a Raspberry Pi 5 (8 GB)
 
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-venv python3-pip git make
+sudo apt install -y git make curl
+# Install uv using the official installer:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# Open a new terminal or source the installer-provided environment file
 # clone your GitHub repository, then:
 cd dogy
-make install
+uv lock
+uv sync --group dev
 make test
 make doctor
 make chat-es  # or make chat-en
@@ -34,6 +38,14 @@ bash scripts/diagnose-thinkpad.sh
 ```
 
 If cloning under a different folder name, change the `cd` command. Commands assume they are run from repository root. `state/` is gitignored; treat it as sensitive and never commit it.
+
+## uv workflow
+
+DOGY uses Astral uv for environment and dependency management. Generate and commit `uv.lock` on the first internet-connected setup. On both x86_64 Ubuntu and aarch64 Raspberry Pi OS, use
+`uv sync --locked` to resolve installed wheels for the target architecture.
+For new dependencies: `uv add package-name`; for development dependencies:
+`uv add --dev package-name`; then commit `pyproject.toml` and `uv.lock`.
+The lockfile is not a substitute for reviewing packages and their provenance.
 
 ## GitHub upload
 
