@@ -1,0 +1,13 @@
+[assistant]
+name = "DOGY"
+language = "en"
+cloud_enabled = false
+network_inference_enabled = false
+[security]
+tools_enabled = false
+family_accounts_enabled = false
+[storage]
+state_dir = "state"
+[llm]
+# Future Pi-to-T14 inference requires WireGuard + mTLS. Disabled until implemented.
+backend = "disabled"
