@@ -21,7 +21,7 @@ def main():
     state = Path(cfg["storage"]["state_dir"])
     audit = state / "audit.jsonl"
     if args.command == "doctor":
-        print("DOGY configuration: OK (offline, tools disabled, no family auth yet)")
+        print("DOGY configuration: OK (tools disabled, no family auth yet; LLM: " + cfg["llm"]["backend"] + ")")
         return
     if args.command == "verify-audit":
         ok, _ = verify(audit)
@@ -29,6 +29,16 @@ def main():
         if not ok:
             raise SystemExit(1)
         return
+    llm = None
+    if cfg["llm"]["backend"] == "ollama":
+        from .llm.ollama import OllamaClient
+        settings = cfg["llm"]
+        llm = OllamaClient(
+            model=settings.get("model", "qwen2.5:3b"),
+            endpoint=settings.get("endpoint", "http://127.0.0.1:11434"),
+            timeout=float(settings.get("timeout", 90)),
+            max_tokens=int(settings.get("max_tokens", 160)),
+        )
     print("DOGY local text PoC. Type 'exit' to quit. No user authentication or private storage yet.")
     while True:
         try:
@@ -40,11 +50,25 @@ def main():
             break
         if not message:
             continue
+        # Rule-only classification first: no model call for deterministic commands.
         reply = respond(message, args.lang, args.timezone)
+        if reply.route == "unsupported" and llm is not None:
+            from .llm.ollama import OllamaError
+            print("DOGY> ", end="", flush=True)
+            try:
+                for chunk in llm.stream(message, args.lang):
+                    print(chunk, end="", flush=True)
+                print()
+                route = "llm"
+            except OllamaError:
+                print("\n" + ("El modelo local no está disponible." if args.lang == "es" else "The local model is unavailable."))
+                route = "llm_error"
+        else:
+            print("DOGY>", reply.text)
+            route = reply.route
         # No raw utterance or reply is persisted; hashes still allow dictionary guessing for short prompts.
-        append_event(audit, "conversation_route", {"route": reply.route, "language": args.lang,
+        append_event(audit, "conversation_route", {"route": route, "language": args.lang,
                     "input_length": len(message), "input_sha256": hashlib.sha256(message.encode()).hexdigest()})
-        print("DOGY>", reply.text)
 
 if __name__ == "__main__":
     main()
