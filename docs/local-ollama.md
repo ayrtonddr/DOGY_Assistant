@@ -30,6 +30,6 @@ uv run dogy doctor --config config/local-ollama.toml
 uv run dogy chat --lang es --config config/local-ollama.toml
 ```
 
-The default configuration remains `backend = "disabled"`. Deterministic commands (greetings, time, help) bypass inference. Unknown utterances are sent to the local Ollama `/api/chat` endpoint. The client also exposes a streaming method for future voice integration; the CLI currently uses non-streaming generation.
+The default configuration remains `backend = "disabled"`. Deterministic commands (greetings, time, help) bypass inference. Unknown utterances are sent to the local Ollama `/api/chat` endpoint. The CLI streams model output token-by-token to the terminal. This improves perceived responsiveness but does not increase generation throughput. The router's non-streaming API remains available for programmatic use.
 
 **Security limitations:** Only numeric loopback HTTP endpoints are accepted; no LAN, cloud, tools, or family authentication. This is not yet appropriate for private family data. The existing audit system stores a SHA-256 of the utterance, which can be vulnerable to dictionary guessing. The current timeout is a per-network-operation timeout, not a strict total generation deadline.
