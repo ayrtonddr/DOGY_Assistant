@@ -15,7 +15,14 @@ def main():
     parser.add_argument("--record-seconds", type=int, default=5)
     parser.add_argument("--stt-model", choices=["tiny", "base", "small"], default="tiny")
     parser.add_argument("--audio-device", default="default")
+    parser.add_argument("--speak", action="store_true", help="Speak voice responses using local Piper")
+    parser.add_argument("--tts-model", type=Path, help="Local Piper .onnx voice model")
+    parser.add_argument("--playback-device", default="default")
     args = parser.parse_args()
+    if args.speak and args.command != "voice":
+        parser.error("--speak is only supported with the voice command")
+    if args.speak and args.tts_model is None:
+        parser.error("--speak requires --tts-model")
     try:
         cfg = load_config(args.config)
         ZoneInfo(args.timezone)
@@ -49,6 +56,10 @@ def main():
             transcriber = WhisperTranscriber(args.stt_model, args.lang)
         except TranscriptionError as exc:
             parser.error(str(exc))
+        if args.speak:
+            from .voice.tts import speak, SpeechError
+            if not args.tts_model.expanduser().is_file():
+                parser.error("Piper voice model not found")
         print("DOGY push-to-talk. Press Enter to record; type exit to quit.")
         while True:
             try:
@@ -75,13 +86,17 @@ def main():
                 continue
             print("You>", message)
             reply = respond(message, args.lang, args.timezone)
+            spoken_text = ""
             if reply.route == "unsupported" and llm is not None:
                 from .llm.ollama import OllamaError
                 print("DOGY> ", end="", flush=True)
                 try:
+                    chunks = []
                     for chunk in llm.stream(message, args.lang):
                         print(chunk, end="", flush=True)
+                        chunks.append(chunk)
                     print()
+                    spoken_text = "".join(chunks)
                     route = "llm"
                 except OllamaError:
                     print()
@@ -89,7 +104,13 @@ def main():
                     route = "llm_error"
             else:
                 print("DOGY>", reply.text)
+                spoken_text = reply.text
                 route = reply.route
+            if args.speak and spoken_text.strip():
+                try:
+                    speak(spoken_text, args.tts_model, playback_device=args.playback_device)
+                except (SpeechError, ValueError) as exc:
+                    print("DOGY> Speech output failed:", exc)
             append_event(audit, "conversation_route", {"route": route, "language": args.lang,
                         "input_length": len(message), "input_sha256": hashlib.sha256(message.encode()).hexdigest()})
         return
