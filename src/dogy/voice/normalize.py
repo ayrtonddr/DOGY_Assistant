@@ -3,8 +3,8 @@ import re
 
 # Only normalize the invocation at the beginning, not arbitrary words in questions.
 _NAME = re.compile(
-    r"^(?P<prefix>[¿¡\\s]*)(?P<name>doggy|doggie|doge|dógui|dogui|dokey|doki|dogy)"
-    r"(?=\\b|[,.:;!?])", re.IGNORECASE
+    r"^(?P<prefix>[¿¡\s]*)(?P<name>doggy|doggie|doge|dógui|dogui|dokey|doki|dogy)"
+    r"(?=\b|[,.:;!?])", re.IGNORECASE
 )
 
 
